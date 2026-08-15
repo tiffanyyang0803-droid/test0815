@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>楊心緹 | Personal Portfolio</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: "Noto Sans TC", sans-serif;
+            background: #08090d;
+            color: #f4f1ea;
+            line-height: 1.8;
+            overflow-x: hidden;
+        }
+
+        /* ===== 背景光暈 ===== */
+
+        body::before {
+            content: "";
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(
+                circle,
+                rgba(126, 104, 255, 0.12),
+                transparent 70%
+            );
+            top: -200px;
+            right: -150px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        body::after {
+            content: "";
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            background: radial-gradient(
+                circle,
+                rgba(55, 180, 255, 0.08),
+                transparent 70%
+            );
+            bottom: -200px;
+            left: -150px;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        /* ===== 導覽列 ===== */
+
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 78px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 8%;
+            background: rgba(8, 9, 13, 0.72);
+            backdrop-filter: blur(18px);
+            border-bottom: 1px solid rgba(255,255,255,0.07);
+            z-index: 1000;
+        }
+
+        .logo {
+            font-family: "Playfair Display", serif;
+            font-size: 22px;
+            letter-spacing: 2px;
+        }
+
+        .logo span {
+            color: #9b8cff;
+        }
+
+        nav ul {
+            display: flex;
+            gap: 35px;
+            list-style: none;
+        }
+
+        nav a {
+            color: #aaa;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        nav a:hover {
+            color: white;
+        }
+
+        /* ===== Hero ===== */
+
+        .hero {
+            min-height: 100vh;
+            padding: 180px 8% 100px;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 900px;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 7px 16px;
+            border: 1px solid rgba(155, 140, 255, 0.35);
+            border-radius: 50px;
+            color: #b9afff;
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            background: rgba(155, 140, 255, 0.05);
+        }
+
+        .hero h1 {
+            font-size: clamp(60px, 10vw, 130px);
+            line-height: 0.95;
+            font-weight: 600;
+            letter-spacing: -5px;
+            margin-bottom: 30px;
+        }
+
+        .hero h1 span {
+            font-family: "Playfair Display", serif;
+            font-weight: 500;
+            font-style: italic;
+            color: #9b8cff;
+        }
+
+        .hero p {
+            max-width: 600px;
+            color: #9a9ba3;
+            font-size: 17px;
+            font-weight: 300;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 40px;
+        }
+
+        .btn {
+            padding: 13px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .btn-primary {
+            background: #f4f1ea;
+            color: #090a0e;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,255,255,0.15);
+        }
+
+        .btn-outline {
+            border: 1px solid #33343d;
+            color: #ddd;
+        }
+
+        .btn-outline:hover {
+            border-color: #777;
+        }
+
+        /* ===== Section ===== */
+
+        section {
+            padding: 130px 8%;
+            max-width: 1400px;
+            margin: auto;
+        }
+
+        .section-label {
+            color: #8f83ff;
+            font-size: 12px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: clamp(35px, 5vw, 65px);
+            font-weight: 500;
+            letter-spacing: -2px;
+            margin-bottom: 60px;
+        }
+
+        /* ===== About ===== */
+
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 80px;
+            align-items: start;
+        }
+
+        .about-number {
+            font-family: "Playfair Display", serif;
+            font-size: 150px;
+            color: rgba(255,255,255,0.05);
+            line-height: 0.7;
+        }
+
+        .about-text {
+            color: #a4a5ad;
+            font-size: 17px;
+            max-width: 650px;
+        }
+
+        .about-text strong {
+            color: #fff;
+            font-weight: 500;
+        }
+
+        /* ===== Skills ===== */
+
+        .skills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .skill {
+            padding: 12px 20px;
+            border: 1px solid #292a32;
+            border-radius: 50px;
+            color: #bbb;
+            background: rgba(255,255,255,0.025);
+            transition: 0.3s;
+        }
+
+        .skill:hover {
+            border-color: #7568d8;
+            color: white;
+            transform: translateY(-3px);
+        }
+
+        /* ===== Experience ===== */
+
+        .timeline {
+            border-left: 1px solid #292a32;
+            padding-left: 40px;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 55px;
+        }
+
+        .timeline-item::before {
+            content: "";
+            position: absolute;
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #9b8cff;
+            left: -45px;
+            top: 10px;
+            box-shadow: 0 0 20px rgba(155,140,255,0.8);
+        }
+
+        .timeline-date {
+            color: #8175dd;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .timeline-item h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .timeline-item p {
+            color: #92939b;
+            max-width: 700px;
+        }
+
+        /* ===== Projects ===== */
+
+        .projects {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .project {
+            min-height: 300px;
+            padding: 35px;
+            border: 1px solid #24252c;
+            border-radius: 20px;
+            background:
+                linear-gradient(
+                    135deg,
+                    rgba(255,255,255,0.045),
+                    rgba(255,255,255,0.01)
+                );
+            transition: 0.4s;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .project:hover {
+            transform: translateY(-8px);
+            border-color: #4b4670;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+        }
+
+        .project-number {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .project h3 {
+            font-size: 28px;
+            margin-top: 40px;
+        }
+
+        .project p {
+            color: #8f9098;
+            margin-top: 10px;
+        }
+
+        .project-tag {
+            color: #9b8cff;
+            font-size: 12px;
+            margin-top: 25px;
+        }
+
+        /* ===== Contact ===== */
+
+        .contact {
+            text-align: center;
+            padding-top: 170px;
+            padding-bottom: 170px;
+        }
+
+        .contact h2 {
+            font-size: clamp(45px, 7vw, 90px);
+            font-weight: 500;
+            letter-spacing: -3px;
+            margin-bottom: 25px;
+        }
+
+        .contact h2 span {
+            font-family: "Playfair Display", serif;
+            font-style: italic;
+            color: #9b8cff;
+        }
+
+        .contact p {
+            color: #8d8e96;
+            margin-bottom: 35px;
+        }
+
+        /* ===== Footer ===== */
+
+        footer {
+            padding: 30px 8%;
+            border-top: 1px solid #202127;
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* ===== RWD ===== */
+
+        @media (max-width: 768px) {
+
+            nav {
+                padding: 0 5%;
+            }
+
+            nav ul {
+                gap: 15px;
+            }
+
+            nav a {
+                font-size: 12px;
+            }
+
+            .hero {
+                padding: 150px 7% 80px;
+            }
+
+            .hero h1 {
+                letter-spacing: -3px;
+            }
+
+            section {
+                padding: 90px 7%;
+            }
+
+            .about-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .about-number {
+                font-size: 100px;
+            }
+
+            .projects {
+                grid-template-columns: 1fr;
+            }
+
+            footer {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 導覽列 -->
+    <nav>
+        <div class="logo">YANG <span>✦</span></div>
+
+        <ul>
+            <li><a href="#about">About</a></li>
+            <li><a href="#experience">Experience</a></li>
+            <li><a href="#projects">Projects</a></li>
+            <li><a href="#contact">Contact</a></li>
+        </ul>
+    </nav>
+
+
+    <!-- 首頁 -->
+    <header class="hero">
+
+        <div class="hero-content">
+
+            <div class="tag">
+                HIGH SCHOOL STUDENT · AI CAMP
+            </div>
+
+            <h1>
+                Hi, I'm<br>
+                <span>心緹.</span>
+            </h1>
+
+            <p>
+                我是楊心緹，一名正在探索人工智慧與科技世界的高中生。
+                喜歡學習新事物，也喜歡把想法一步一步變成真正的作品。
+            </p>
+
+            <div class="hero-buttons">
+                <a href="#projects" class="btn btn-primary">
+                    Explore My Work
+                </a>
+
+                <a href="#about" class="btn btn-outline">
+                    About Me
+                </a>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- 關於我 -->
+    <section id="about">
+
+        <div class="section-label">01 — About</div>
+
+        <h2 class="section-title">
+            A student with<br>
+            <span style="color:#9b8cff;">curiosity.</span>
+        </h2>
+
+        <div class="about-grid">
+
+            <div class="about-number">
+                01
+            </div>
+
+            <div class="about-text">
+
+                <p>
+                    嗨，我是<strong>楊心緹</strong>。
+                    目前是一名高中生，正在參加 AI 營隊，
+                    開始更深入地認識人工智慧、程式設計與科技。
+                </p>
+
+                <br>
+
+                <p>
+                    對我來說，學習不只是記住知識，
+                    更重要的是把學到的東西實際運用。
+                    我希望未來可以結合
+                    <strong>AI、創意與設計</strong>，
+                    做出真正有趣又有價值的作品。
+                </p>
+
+                <br>
+
+                <p>
+                    這個網站也是我的一個小小實驗，
+                    用來記錄我的學習歷程與成長。
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- 技能 -->
+    <section>
+
+        <div class="section-label">02 — Interests</div>
+
+        <h2 class="section-title">
+            Things I'm<br>
+            <span style="color:#9b8cff;">exploring.</span>
+        </h2>
+
+        <div class="skills">
+
+            <div class="skill">Artificial Intelligence</div>
+            <div class="skill">Generative AI</div>
+            <div class="skill">HTML / CSS</div>
+            <div class="skill">Creative Coding</div>
+            <div class="skill">Web Design</div>
+            <div class="skill">Technology</div>
+            <div class="skill">Creative Thinking</div>
+
+        </div>
+
+    </section>
+
+
+    <!-- 經歷 -->
+    <section id="experience">
+
+        <div class="section-label">03 — Experience</div>
+
+        <h2 class="section-title">
+            My learning<br>
+            <span style="color:#9b8cff;">journey.</span>
+        </h2>
+
+        <div class="timeline">
+
+            <div class="timeline-item">
+
+                <div class="timeline-date">
+                    2026 · PRESENT
+                </div>
+
+                <h3>AI 營隊</h3>
+
+                <p>
+                    開始接觸人工智慧與生成式 AI，
+                    透過實作與活動了解 AI 的應用方式，
+                    並嘗試將 AI 與自己的創意結合。
+                </p>
+
+            </div>
+
+
+            <div class="timeline-item">
+
+                <div class="timeline-date">
+                    2026
+                </div>
+
+                <h3>Web Design</h3>
+
+                <p>
+                    開始學習 HTML 與 CSS，
+                    嘗試設計自己的個人網站，
+                    將程式碼轉化成具有視覺風格的作品。
+                </p>
+
+            </div>
+
+
+            <div class="timeline-item">
+
+                <div class="timeline-date">
+                    NEXT CHAPTER
+                </div>
+
+                <h3>What's next?</h3>
+
+                <p>
+                    持續探索 AI、程式設計與更多科技領域，
+                    希望未來能夠完成更多屬於自己的作品。
+                </p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- 作品 -->
+    <section id="projects">
+
+        <div class="section-label">04 — Projects</div>
+
+        <h2 class="section-title">
+            Selected<br>
+            <span style="color:#9b8cff;">projects.</span>
+        </h2>
+
+        <div class="projects">
+
+            <div class="project">
+
+                <div>
+                    <div class="project-number">PROJECT 01</div>
+
+                    <h3>AI × Creativity</h3>
+
+                    <p>
+                        將人工智慧與創意結合，
+                        探索 AI 可以如何協助我們創作與學習。
+                    </p>
+                </div>
+
+                <div class="project-tag">
+                    AI · CREATIVE
+                </div>
+
+            </div>
+
+
+            <div class="project">
+
+                <div>
+                    <div class="project-number">PROJECT 02</div>
+
+                    <h3>My First Website</h3>
+
+                    <p>
+                        使用 HTML 與 CSS 建立自己的個人網站，
+                        記錄高中階段的學習與成長。
+                    </p>
+                </div>
+
+                <div class="project-tag">
+                    HTML · CSS · DESIGN
+                </div>
+
+            </div>
+
+
+            <div class="project">
+
+                <div>
+                    <div class="project-number">PROJECT 03</div>
+
+                    <h3>AI Experiment</h3>
+
+                    <p>
+                        在 AI 營隊中進行的實驗與練習，
+                        將課堂上的想法轉化為實際成果。
+                    </p>
+                </div>
+
+                <div class="project-tag">
+                    GENERATIVE AI
+                </div>
+
+            </div>
+
+
+            <div class="project">
+
+                <div>
+                    <div class="project-number">PROJECT 04</div>
+
+                    <h3>Coming Soon</h3>
+
+                    <p>
+                        這裡將放上下一個
+                        即將完成的作品。
+                    </p>
+                </div>
+
+                <div class="project-tag">
+                    IN PROGRESS
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- 聯絡 -->
+    <section id="contact" class="contact">
+
+        <div class="section-label">
+            05 — Contact
+        </div>
+
+        <h2>
+            Let's create<br>
+            <span>something.</span>
+        </h2>
+
+        <p>
+            如果未來有機會，我希望可以認識更多
+            對 AI、科技與創意有興趣的人。
+        </p>
+
+        <a href="mailto:your@email.com" class="btn btn-primary">
+            Say Hello ↗
+        </a>
+
+    </section>
+
+
+    <!-- Footer -->
+    <footer>
+
+        <div>
+            © 2026 Yang Hsin-Ti
+        </div>
+
+        <div>
+            Designed & Built with HTML + CSS
+        </div>
+
+    </footer>
+
+</body>
+</html>
