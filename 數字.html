@@ -1,0 +1,1457 @@
+
+<!DOCTYPE html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="UTF-8">
+
+    <!-- 讓手機和平板也能正常顯示 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI 手寫數字辨識器</title>
+
+    <!-- TensorFlow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+
+    <!-- Teachable Machine 圖片分類套件 -->
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+
+
+    <style>
+
+        /* =========================
+           基本設定
+        ========================= */
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+
+            font-family:
+                "Microsoft JhengHei",
+                "Noto Sans TC",
+                sans-serif;
+
+            background: linear-gradient(
+                135deg,
+                #fff5f8,
+                #f2efff
+            );
+
+            color: #514858;
+
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            padding: 20px;
+        }
+
+
+        /* =========================
+           主卡片
+        ========================= */
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+
+            background: white;
+
+            border-radius: 30px;
+
+            padding: 40px;
+
+            text-align: center;
+
+            box-shadow:
+                0 20px 60px rgba(100, 80, 130, 0.15);
+        }
+
+
+        /* =========================
+           標題
+        ========================= */
+
+        .icon {
+            font-size: 55px;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            font-size: 38px;
+            color: #675177;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #958b9d;
+            margin-bottom: 30px;
+        }
+
+
+        /* =========================
+           手寫區
+        ========================= */
+
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+
+            color: #665575;
+
+            margin-bottom: 12px;
+        }
+
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+
+            margin-bottom: 18px;
+        }
+
+        #drawingCanvas {
+            width: 300px;
+            height: 300px;
+
+            background: white;
+
+            border: 3px solid #d8cbe0;
+
+            border-radius: 22px;
+
+            cursor: crosshair;
+
+            /* 避免手機滑動畫布時整個網頁跟著滑動 */
+            touch-action: none;
+
+            box-shadow:
+                0 8px 25px rgba(80, 60, 100, 0.12);
+        }
+
+
+        /* =========================
+           按鈕
+        ========================= */
+
+        .button-area {
+            display: flex;
+            justify-content: center;
+
+            gap: 12px;
+
+            flex-wrap: wrap;
+
+            margin-bottom: 25px;
+        }
+
+        button,
+        .upload-button {
+
+            border: none;
+
+            padding: 12px 25px;
+
+            border-radius: 50px;
+
+            font-size: 15px;
+
+            cursor: pointer;
+
+            transition: 0.25s;
+        }
+
+        .predict-button {
+            background: #80639a;
+            color: white;
+        }
+
+        .predict-button:hover {
+            background: #694f83;
+            transform: translateY(-2px);
+        }
+
+        .clear-button {
+            background: #eee8f2;
+            color: #655b6d;
+        }
+
+        .clear-button:hover {
+            background: #ddd3e5;
+            transform: translateY(-2px);
+        }
+
+
+        /* =========================
+           上傳圖片
+        ========================= */
+
+        .upload-box {
+
+            padding: 25px;
+
+            border: 2px dashed #d8cbe0;
+
+            border-radius: 22px;
+
+            background: #fcf9ff;
+
+            margin-top: 10px;
+        }
+
+        .upload-box p {
+            color: #81758a;
+            margin-bottom: 15px;
+        }
+
+        /* 隱藏原本的 input */
+        #imageUpload {
+            display: none;
+        }
+
+        .upload-button {
+
+            display: inline-block;
+
+            background: #f0a56d;
+
+            color: white;
+        }
+
+        .upload-button:hover {
+
+            background: #dc8c50;
+
+            transform: translateY(-2px);
+        }
+
+
+        /* =========================
+           圖片預覽
+        ========================= */
+
+        .preview-area {
+
+            display: none;
+
+            margin-top: 25px;
+        }
+
+        .preview-area.show {
+            display: block;
+        }
+
+        #preview {
+
+            width: 300px;
+            max-width: 100%;
+
+            max-height: 300px;
+
+            object-fit: contain;
+
+            border-radius: 20px;
+
+            border: 2px solid #ddd3e2;
+        }
+
+
+        /* =========================
+           Loading
+        ========================= */
+
+        .loading {
+
+            display: none;
+
+            margin: 20px 0;
+
+            color: #887991;
+
+            font-size: 15px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+
+        /* =========================
+           結果區
+        ========================= */
+
+        .result {
+
+            display: none;
+
+            margin-top: 30px;
+
+            padding: 30px;
+
+            background: #fffaf5;
+
+            border-radius: 25px;
+        }
+
+        .result.show {
+            display: block;
+        }
+
+        .result-title {
+
+            font-size: 14px;
+
+            color: #9b8f9e;
+
+            margin-bottom: 8px;
+        }
+
+        #prediction {
+
+            font-size: 38px;
+
+            font-weight: bold;
+
+            color: #69517d;
+
+            margin-bottom: 25px;
+        }
+
+
+        /* =========================
+           機率進度條
+        ========================= */
+
+        .probability {
+
+            text-align: left;
+
+            margin-bottom: 20px;
+        }
+
+        .probability-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            margin-bottom: 8px;
+
+            font-size: 16px;
+        }
+
+        .bar {
+
+            width: 100%;
+
+            height: 14px;
+
+            background: #eee8f1;
+
+            border-radius: 20px;
+
+            overflow: hidden;
+        }
+
+        .bar-fill {
+
+            width: 0%;
+
+            height: 100%;
+
+            border-radius: 20px;
+
+            transition: width 0.8s ease;
+        }
+
+        .bar1 {
+            background: #f2a567;
+        }
+
+        .bar2 {
+            background: #8c75b5;
+        }
+
+        .bar3 {
+            background: #70a99b;
+        }
+
+
+        /* =========================
+           模型資訊
+        ========================= */
+
+        .model-info {
+
+            margin-top: 25px;
+
+            padding: 15px;
+
+            background: #f5f1f7;
+
+            border-radius: 15px;
+
+            color: #81758a;
+
+            font-size: 13px;
+
+            line-height: 1.8;
+        }
+
+
+        /* =========================
+           Footer
+        ========================= */
+
+        .footer {
+
+            margin-top: 30px;
+
+            color: #aaa0ad;
+
+            font-size: 12px;
+        }
+
+
+        /* =========================
+           手機版
+        ========================= */
+
+        @media (max-width: 600px) {
+
+            .container {
+                padding: 28px 18px;
+            }
+
+            h1 {
+                font-size: 30px;
+            }
+
+            #drawingCanvas {
+                width: 260px;
+                height: 260px;
+            }
+
+            #prediction {
+                font-size: 30px;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <main class="container">
+
+
+        <!-- =========================
+             網頁標題
+        ========================= -->
+
+        <div class="icon">
+            ✏️🔢
+        </div>
+
+        <h1>
+            AI 手寫數字辨識器
+        </h1>
+
+        <p class="subtitle">
+            寫下 1、2 或 3，看看 AI 能不能猜對！
+        </p>
+
+
+        <!-- =========================
+             手寫區
+        ========================= -->
+
+        <div class="section-title">
+            ✍️ 在下面寫一個數字
+        </div>
+
+
+        <div class="canvas-wrapper">
+
+            <!-- 手寫畫布 -->
+            <canvas
+                id="drawingCanvas"
+                width="300"
+                height="300">
+            </canvas>
+
+        </div>
+
+
+        <!-- 手寫按鈕 -->
+
+        <div class="button-area">
+
+            <button
+                class="predict-button"
+                onclick="predictDrawing()">
+
+                🤖 開始辨識
+
+            </button>
+
+
+            <button
+                class="clear-button"
+                onclick="clearCanvas()">
+
+                🧹 清除重寫
+
+            </button>
+
+        </div>
+
+
+        <!-- =========================
+             上傳圖片
+        ========================= -->
+
+        <div class="upload-box">
+
+            <p>
+                📷 或者上傳一張手寫數字圖片
+            </p>
+
+
+            <label
+                for="imageUpload"
+                class="upload-button">
+
+                選擇圖片
+
+            </label>
+
+
+            <input
+                type="file"
+                id="imageUpload"
+                accept="image/*">
+
+        </div>
+
+
+        <!-- AI 分析中 -->
+
+        <div
+            id="loading"
+            class="loading">
+
+            🤖 AI 正在努力分析中...
+
+        </div>
+
+
+        <!-- =========================
+             圖片預覽
+        ========================= -->
+
+        <div
+            id="previewArea"
+            class="preview-area">
+
+            <img
+                id="preview"
+                alt="圖片預覽">
+
+        </div>
+
+
+        <!-- =========================
+             AI 結果
+        ========================= -->
+
+        <div
+            id="result"
+            class="result">
+
+            <div class="result-title">
+                AI 辨識結果
+            </div>
+
+
+            <!-- 最終判斷 -->
+
+            <div id="prediction">
+                🤖 等待辨識
+            </div>
+
+
+            <!-- =====================
+                 數字 1
+            ====================== -->
+
+            <div class="probability">
+
+                <div class="probability-header">
+
+                    <span>
+                        ① 數字 1
+                    </span>
+
+                    <span id="probability1">
+                        0%
+                    </span>
+
+                </div>
+
+
+                <div class="bar">
+
+                    <div
+                        id="bar1"
+                        class="bar-fill bar1">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================
+                 數字 2
+            ====================== -->
+
+            <div class="probability">
+
+                <div class="probability-header">
+
+                    <span>
+                        ② 數字 2
+                    </span>
+
+                    <span id="probability2">
+                        0%
+                    </span>
+
+                </div>
+
+
+                <div class="bar">
+
+                    <div
+                        id="bar2"
+                        class="bar-fill bar2">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =====================
+                 數字 3
+            ====================== -->
+
+            <div class="probability">
+
+                <div class="probability-header">
+
+                    <span>
+                        ③ 數字 3
+                    </span>
+
+                    <span id="probability3">
+                        0%
+                    </span>
+
+                </div>
+
+
+                <div class="bar">
+
+                    <div
+                        id="bar3"
+                        class="bar-fill bar3">
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- 顯示模型實際分類 -->
+            <div
+                id="modelInfo"
+                class="model-info">
+
+                AI 模型正在載入...
+
+            </div>
+
+        </div>
+
+
+        <div class="footer">
+
+            AI Handwritten Digit Classifier
+            ·
+            Teachable Machine
+
+        </div>
+
+
+    </main>
+
+
+    <script>
+
+
+        /* =====================================
+           1. 你的 Teachable Machine 模型
+        ===================================== */
+
+        const MODEL_URL =
+            "https://teachablemachine.withgoogle.com/models/ZH8W39MqW/";
+
+
+        /* =====================================
+           2. 宣告變數
+        ===================================== */
+
+        let model = null;
+
+        const canvas =
+            document.getElementById("drawingCanvas");
+
+        const ctx =
+            canvas.getContext("2d");
+
+        const imageUpload =
+            document.getElementById("imageUpload");
+
+        const preview =
+            document.getElementById("preview");
+
+        const previewArea =
+            document.getElementById("previewArea");
+
+        const loading =
+            document.getElementById("loading");
+
+        const result =
+            document.getElementById("result");
+
+        const prediction =
+            document.getElementById("prediction");
+
+        const modelInfo =
+            document.getElementById("modelInfo");
+
+
+        /* =====================================
+           3. 設定畫布
+        ===================================== */
+
+        // 白色背景
+
+        ctx.fillStyle = "white";
+
+        ctx.fillRect(
+            0,
+            0,
+            canvas.width,
+            canvas.height
+        );
+
+
+        // 黑色筆刷
+
+        ctx.strokeStyle = "black";
+
+        ctx.lineWidth = 18;
+
+        ctx.lineCap = "round";
+
+        ctx.lineJoin = "round";
+
+
+        let isDrawing = false;
+
+
+        /* =====================================
+           4. 取得滑鼠在 Canvas 的位置
+        ===================================== */
+
+        function getMousePosition(event) {
+
+            const rect =
+                canvas.getBoundingClientRect();
+
+            return {
+
+                x:
+                    (event.clientX - rect.left)
+                    * canvas.width
+                    / rect.width,
+
+                y:
+                    (event.clientY - rect.top)
+                    * canvas.height
+                    / rect.height
+
+            };
+
+        }
+
+
+        /* =====================================
+           5. 滑鼠開始手寫
+        ===================================== */
+
+        canvas.addEventListener(
+            "mousedown",
+            function(event) {
+
+                isDrawing = true;
+
+                const position =
+                    getMousePosition(event);
+
+                ctx.beginPath();
+
+                ctx.moveTo(
+                    position.x,
+                    position.y
+                );
+
+            }
+        );
+
+
+        /* 滑鼠移動 */
+
+        canvas.addEventListener(
+            "mousemove",
+            function(event) {
+
+                if (!isDrawing) {
+                    return;
+                }
+
+                const position =
+                    getMousePosition(event);
+
+                ctx.lineTo(
+                    position.x,
+                    position.y
+                );
+
+                ctx.stroke();
+
+            }
+        );
+
+
+        /* 滑鼠放開 */
+
+        canvas.addEventListener(
+            "mouseup",
+            function() {
+
+                isDrawing = false;
+
+            }
+        );
+
+
+        canvas.addEventListener(
+            "mouseleave",
+            function() {
+
+                isDrawing = false;
+
+            }
+        );
+
+
+        /* =====================================
+           6. 手機觸控手寫
+        ===================================== */
+
+        canvas.addEventListener(
+            "touchstart",
+            function(event) {
+
+                event.preventDefault();
+
+                isDrawing = true;
+
+                const rect =
+                    canvas.getBoundingClientRect();
+
+                const touch =
+                    event.touches[0];
+
+                const x =
+                    (touch.clientX - rect.left)
+                    * canvas.width
+                    / rect.width;
+
+                const y =
+                    (touch.clientY - rect.top)
+                    * canvas.height
+                    / rect.height;
+
+                ctx.beginPath();
+
+                ctx.moveTo(x, y);
+
+            }
+        );
+
+
+        canvas.addEventListener(
+            "touchmove",
+            function(event) {
+
+                event.preventDefault();
+
+                if (!isDrawing) {
+                    return;
+                }
+
+                const rect =
+                    canvas.getBoundingClientRect();
+
+                const touch =
+                    event.touches[0];
+
+                const x =
+                    (touch.clientX - rect.left)
+                    * canvas.width
+                    / rect.width;
+
+                const y =
+                    (touch.clientY - rect.top)
+                    * canvas.height
+                    / rect.height;
+
+                ctx.lineTo(x, y);
+
+                ctx.stroke();
+
+            }
+        );
+
+
+        canvas.addEventListener(
+            "touchend",
+            function() {
+
+                isDrawing = false;
+
+            }
+        );
+
+
+        /* =====================================
+           7. 清除畫布
+        ===================================== */
+
+        function clearCanvas() {
+
+            // 清除畫布
+
+            ctx.fillStyle = "white";
+
+            ctx.fillRect(
+                0,
+                0,
+                canvas.width,
+                canvas.height
+            );
+
+
+            // 隱藏辨識結果
+
+            result.classList.remove("show");
+
+
+            // 隱藏圖片預覽
+
+            previewArea.classList.remove("show");
+
+
+            // 清空圖片選擇
+
+            imageUpload.value = "";
+
+        }
+
+
+        /* =====================================
+           8. 載入 AI 模型
+        ===================================== */
+
+        async function loadModel() {
+
+            try {
+
+                const modelURL =
+                    MODEL_URL + "model.json";
+
+                const metadataURL =
+                    MODEL_URL + "metadata.json";
+
+
+                /*
+                    載入 Teachable Machine 模型
+                */
+
+                model =
+                    await tmImage.load(
+                        modelURL,
+                        metadataURL
+                    );
+
+
+                /*
+                    取得模型的分類名稱
+                */
+
+                const labels =
+                    model.getClassLabels();
+
+
+                console.log(
+                    "模型分類：",
+                    labels
+                );
+
+
+                modelInfo.innerHTML =
+                    "✅ AI 模型載入成功<br>" +
+                    "模型分類：" +
+                    labels.join("、");
+
+
+            } catch (error) {
+
+                console.error(
+                    "模型載入失敗：",
+                    error
+                );
+
+
+                modelInfo.innerHTML =
+                    "⚠️ AI 模型載入失敗<br>" +
+                    "請確認模型網址是否正確。";
+
+            }
+
+        }
+
+
+        /* =====================================
+           9. 辨識手寫數字
+        ===================================== */
+
+        async function predictDrawing() {
+
+            if (!model) {
+
+                alert(
+                    "AI 模型還在載入，請稍候！"
+                );
+
+                return;
+            }
+
+
+            loading.classList.add("show");
+
+
+            try {
+
+                /*
+                    Canvas 可以直接交給
+                    Teachable Machine 進行辨識。
+                */
+
+                const predictions =
+                    await model.predict(canvas);
+
+
+                showResult(predictions);
+
+
+            } catch (error) {
+
+                console.error(
+                    "辨識錯誤：",
+                    error
+                );
+
+
+                prediction.innerText =
+                    "⚠️ 辨識失敗";
+
+            }
+
+
+            loading.classList.remove("show");
+
+        }
+
+
+        /* =====================================
+           10. 上傳圖片
+        ===================================== */
+
+        imageUpload.addEventListener(
+            "change",
+            function(event) {
+
+                const file =
+                    event.target.files[0];
+
+
+                if (!file) {
+                    return;
+                }
+
+
+                /*
+                    使用 FileReader
+                    將圖片讀進網頁。
+                */
+
+                const reader =
+                    new FileReader();
+
+
+                reader.onload =
+                    function(e) {
+
+                        preview.src =
+                            e.target.result;
+
+
+                        // 顯示圖片預覽
+
+                        previewArea.classList.add(
+                            "show"
+                        );
+
+
+                        /*
+                            等圖片載入完成
+                            再交給 AI。
+                        */
+
+                        preview.onload =
+                            async function() {
+
+                                if (!model) {
+
+                                    alert(
+                                        "AI 模型還在載入！"
+                                    );
+
+                                    return;
+                                }
+
+
+                                loading.classList.add(
+                                    "show"
+                                );
+
+
+                                try {
+
+                                    const predictions =
+                                        await model.predict(
+                                            preview
+                                        );
+
+
+                                    showResult(
+                                        predictions
+                                    );
+
+
+                                } catch (error) {
+
+                                    console.error(
+                                        "圖片辨識錯誤：",
+                                        error
+                                    );
+
+
+                                    prediction.innerText =
+                                        "⚠️ 辨識失敗";
+
+                                }
+
+
+                                loading.classList.remove(
+                                    "show"
+                                );
+
+                            };
+
+                    };
+
+
+                reader.readAsDataURL(file);
+
+            }
+        );
+
+
+        /* =====================================
+           11. 取得分類名稱
+        ===================================== */
+
+        function isClass(label, number) {
+
+            const name =
+                label
+                    .trim()
+                    .toLowerCase();
+
+
+            /*
+                支援幾種常見命名：
+
+                1
+                數字1
+                數字 1
+                digit1
+                digit 1
+                class 1
+            */
+
+            return (
+
+                name === String(number) ||
+
+                name === "class " + number ||
+
+                name === "digit" + number ||
+
+                name === "digit " + number ||
+
+                name.includes("數字" + number) ||
+
+                name.includes("數字 " + number)
+
+            );
+
+        }
+
+
+        /* =====================================
+           12. 顯示 AI 結果
+        ===================================== */
+
+        function showResult(predictions) {
+
+            let score1 = 0;
+            let score2 = 0;
+            let score3 = 0;
+
+
+            /*
+                依照模型真正的分類名稱
+                找出 1、2、3 的機率。
+            */
+
+            predictions.forEach(
+                function(item) {
+
+                    if (
+                        isClass(
+                            item.className,
+                            1
+                        )
+                    ) {
+
+                        score1 =
+                            item.probability;
+
+                    }
+
+
+                    if (
+                        isClass(
+                            item.className,
+                            2
+                        )
+                    ) {
+
+                        score2 =
+                            item.probability;
+
+                    }
+
+
+                    if (
+                        isClass(
+                            item.className,
+                            3
+                        )
+                    ) {
+
+                        score3 =
+                            item.probability;
+
+                    }
+
+                }
+            );
+
+
+            /* =================================
+               顯示模型實際回傳結果
+            ================================= */
+
+            let modelText =
+                "AI 實際分類結果：<br>";
+
+
+            predictions.forEach(
+                function(item) {
+
+                    modelText +=
+                        item.className +
+                        "：" +
+                        (
+                            item.probability * 100
+                        ).toFixed(1) +
+                        "%<br>";
+
+                }
+            );
+
+
+            modelInfo.innerHTML =
+                modelText;
+
+
+            /* =================================
+               轉成百分比
+            ================================= */
+
+            const percent1 =
+                Math.round(score1 * 100);
+
+            const percent2 =
+                Math.round(score2 * 100);
+
+            const percent3 =
+                Math.round(score3 * 100);
+
+
+            /* 顯示文字 */
+
+            document.getElementById(
+                "probability1"
+            ).innerText =
+                percent1 + "%";
+
+
+            document.getElementById(
+                "probability2"
+            ).innerText =
+                percent2 + "%";
+
+
+            document.getElementById(
+                "probability3"
+            ).innerText =
+                percent3 + "%";
+
+
+            /* 更新進度條 */
+
+            document.getElementById(
+                "bar1"
+            ).style.width =
+                percent1 + "%";
+
+
+            document.getElementById(
+                "bar2"
+            ).style.width =
+                percent2 + "%";
+
+
+            document.getElementById(
+                "bar3"
+            ).style.width =
+                percent3 + "%";
+
+
+            /* =================================
+               找出最高機率
+            ================================= */
+
+            const maxScore =
+                Math.max(
+                    score1,
+                    score2,
+                    score3
+                );
+
+
+            if (maxScore === 0) {
+
+                prediction.innerText =
+                    "🤔 無法判斷";
+
+            }
+
+            else if (maxScore === score1) {
+
+                prediction.innerText =
+                    "① AI 判斷是「1」！";
+
+            }
+
+            else if (maxScore === score2) {
+
+                prediction.innerText =
+                    "② AI 判斷是「2」！";
+
+            }
+
+            else {
+
+                prediction.innerText =
+                    "③ AI 判斷是「3」！";
+
+            }
+
+
+            /* 顯示結果 */
+
+            result.classList.add("show");
+
+        }
+
+
+        /* =====================================
+           13. 網頁開啟時載入模型
+        ===================================== */
+
+        loadModel();
+
+    </script>
+
+</body>
+
+</html>
